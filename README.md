@@ -1,6 +1,10 @@
-# Modeling_Implementation_of_Audio_Amplifiers
+## Modeling_Implementation_of_Audio_Amplifiers
+===============================================
 
-Authors: Cody Frye, Moe Gould 
+# Authors: 
 
+Cody Frye, Mitchell Gould 
+
+# Description
 
 Bradley university E.E. Department senior design project 
