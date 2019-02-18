@@ -5,12 +5,13 @@ classdef VoltageSource < WDFOnePort
        V
     end
     methods
-        function obj = VoltageSource(Vs)
-            obj.V=Vs;
+        function obj = VoltageSource()
+            %obj.V=Vs;
         end
-        function rf = get_reflected_wave(obj, a)
+        function rf = get_reflected_wave(obj, a, Vs)
             %METHOD1 Summary of this method goes here
             %   Detailed explanation goes here
+            obj.V=Vs;
             obj.a = a;
             obj.b = 2*obj.V - a;
             rf = obj.b;
