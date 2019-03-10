@@ -9,16 +9,17 @@ Fs=96000;
 %% Sine Gen
 f=1000;
 gain=1;
-ts=1/96000;
+ts=1/Fs;
 N=100000;
 t=1:N;
-input = gain.*sin(2*pi*f/Fs.*t);
+input = gain.*cos(2*pi*f/Fs.*t);
 steps=length(input);
 
 %% Voltages
 %Vg=zeros(1,steps);
 %Vg(1)=1;
-Vg=20;
+%Vg=20;
+Vg=10;
 Vk=0;
 Vpk=0;
 
@@ -46,92 +47,76 @@ RS22 = RP11;
 RS21 = RS23+RS22;
 
 %% initialize waves
-ap13=0;
-ap12=0;
-ap11=0;
-ap23=0;
-ap22=0;
-ap21=0;
-as13=0;
-as12=0;
-as11=0;
-as23=0;
-as22=0;
-as21=0;
+as1=zeros(1,3);
+as2=zeros(1,3);
+ap1=zeros(1,3);
+ap2=zeros(1,3);
 
-bp13=0;
-bp12=0;
-bp11=0;
-bp23=0;
-bp22=0;
-bp21=0;
-bs13=0;
-bs12=0;
-bs11=0;
-bs23=0;
-bs22=0;
-bs21=0;
+bs1=zeros(1,3);
+bs2=zeros(1,3);
+bp1=zeros(1,3);
+bp2=zeros(1,3);
 
 %process loop
 for k=1:steps
    % 1. Gather inputs
-   as13=Ro.get_reflected_wave(bs13);
-   as12=Co.get_reflected_wave(bs12);
-   ap13=ERp.get_reflected_wave(bp13,input(1,k));
-   ap23=Rk.get_reflected_wave(bp23);
-   ap22=Ck.get_reflected_wave(bp22);
+   as1(3)=Ro.get_reflected_wave(bs1(3));
+   as1(2)=Co.get_reflected_wave(bs1(2));
+   ap1(3)=ERp.get_reflected_wave(bp1(3),input(k));
+   ap2(3)=Rk.get_reflected_wave(bp2(3));
+   ap2(2)=Ck.get_reflected_wave(bp2(2));
    
    % 2. Wave up
-   bs1=SeriesAdaptor([as11 as12 as13],[RS11 RS12 RS13]);
-   ap12=bs1(1,1);
+   bs1=SeriesAdaptor(as1,[RS11 RS12 RS13]);
+   ap1(2)=bs1(1,1);
    
-   bp1=ParallelAdaptor([ap11 ap12 ap13],[RP11 RP12 RP13]);
-   as22=bp1(1,1);
+   bp1=ParallelAdaptor(ap1,[RP11 RP12 RP13]);
+   as2(2)=bp1(1,1);
    
-   bp2=ParallelAdaptor([ap21 ap22 ap23],[RP11 RP12 RP13]);
-   as23=bp2(1,1);
+   bp2=ParallelAdaptor(ap2,[RP11 RP12 RP13]);
+   as2(3)=bp2(1,1);
    
-   bs2=SeriesAdaptor([as21 as22 as23],[RS21 RS22 RS23]);
+   bs2=SeriesAdaptor(as2,[RS21 RS22 RS23]);
    Ta=bs2(1,1);
    
    % 3. Root (Triode Valve)
    Vgk=Vg-Vk;
-   [as21, Vpk] = Triode(Ta, RS21, Vgk, Vpk);
-   debugVar(k)=as21;
+   [as2(1), Vpk] = Triode(Ta, RS21, Vgk, Vpk);
+   debugVar(k)=as2(1);
    %% Problem Here in 4 and/or 5
    %-------------------------------------------------------%
    % 4. Wave down
-    bs2=SeriesAdaptor([as21 as22 as23],[RS21 RS22 RS23]);
-   ap21=bs2(3);
-   ap11=bs2(2);
+   bs2=SeriesAdaptor(as2,[RS21 RS22 RS23]);
+   ap2(1)=bs2(3);
+   ap1(1)=bs2(2);
    
-   bp2=ParallelAdaptor([ap21 ap22 ap23],[RP21 RP22 RP23]);
-   bp23=bp2(3);
-   bp22=bp2(2);
+   bp2=ParallelAdaptor(ap2,[RP21 RP22 RP23]);
+   bp2(3)=bp2(3);
+   bp2(2)=bp2(2);
    
-   bp1=ParallelAdaptor([ap11 ap12 ap13],[RP11 RP12 RP13]);
-   bp13=bp1(3);
-   as11=bp1(2);
+   bp1=ParallelAdaptor(ap1,[RP11 RP12 RP13]);
+   bp1(3)=bp1(3);
+   as1(1)=bp1(2);
    
-   bs1=SeriesAdaptor([as11 as12 as13],[RS21 RS22 RS23]);
-   bs12=bs1(2);
-   bs13=bs1(3);
+   bs1=SeriesAdaptor(as1,[RS21 RS22 RS23]);
+   bs1(2)=bs1(2);
+   bs1(3)=bs1(3);
    
    % 5. Gather outputs
    Vk = Rk.wave_to_voltage();
    output(k) = Ro.wave_to_voltage();
    
-   Ck.set_incident_wave(bp22);
-   Co.set_incident_wave(bs12);
+   Ck.set_incident_wave(bp2(2));
+   Co.set_incident_wave(bs1(2));
    %-------------------------------------------------------%
 end
 
 %% plot
-%plot(debugVar)
-plot(output);
-hold on
-%plot(input);
-hold off
+plot(debugVar)
+%plot(output.*10^6);
+% hold on
+% %plot(input);
+% hold off
 % [h,w]=freqz(output,1,2048*2);
 % f=(w/(2*pi))*Fs;
 % H=20*log10(abs(h));
